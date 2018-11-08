@@ -1,0 +1,118 @@
+-simulates pipeline 
+-takes instructions add sub addi mul lw sw beq
+-error protection only on program input
+
+-simulation driven by clock does something every clock transition, is sequential 
+
+-mips will be in file read by sim (fgets)
+
+-Memory Access time: c cycles
+-Multiply time: m cycles
+-All other EX operations: n cycles
+-ID and WB stages take one cycle to complete tasks
+
+-instruction memory: addressed by PC, size is 2k bytes or 512 words
+-data memory: accessible to the program, size is also 2k bytes or 512 words
+-both of these are implemented as linear arrays
+
+PROCESSOR
+-IF (can take more than one)
+    -fetches from the instruction memory
+    -freezes if 
+        -branches detected in ID stages
+        -when branch is detected, no further instructions read until resolved
+
+-ID (one cycle)
+    -decodes instructions
+    -checks for data(RAW) and control hazards
+        -holds up further processing until hazards are resolved
+        -provides EX stage with operands it needs
+    -RAW Hazards are detected in this stage
+        -instructions are stalled until hazard is cleared
+        -to detect RAW hazard check pipeline latches in front of it
+    -Control Hazards are also detected in this stage
+        -they are resolved in EX 
+        -beq 
+
+-EX (can take more than one)  (multiply is M cycles) (all other ops are n cycles)
+    -braches resolved in EX stage where a subtraction operation is carried out and the result is used to determine if the branch is taken or not
+    -executes specified operation on the operands it recieves from ID
+    -use a counter to keep trackof ongoing operations 
+    -only one instruction in EX at any time
+
+-MEM (c cycles)
+    -is only used by lw and sw instructions
+    -recieves data memory address from EX and carries out data mem read/write operation
+
+-WB (one cycle)
+    -writes back into register file
+    -will do nothing if instruction does not do a register read
+    -check if there is anything new in MEM/WB latch
+        -if so does it require WB stage
+            -yes, carry out register write operation, update the array representing register file
+            -increment stage usage counter
+        -if no
+            -do nothing except remove whatever is in the MEM/WB latch
+
+            
+
+-progScanner()
+    -reads from file provided by user, containing mips assembly
+    -has to be flexible with empty spaces
+    -writes what was read into the array representing IM 
+
+-parser()
+    -from the instruction passed to it by progscanner()
+    -break it up into its constituent fields(opcode, source registers, immediate field, destination register)
+    -detect errors in program 
+        -illegal opcode
+        -illegal register name
+        -reg number out of bounds 
+        -immediate field too large
+
+-Module for each stage
+-Latches between each stage
+    -holds information relating to a single instruction
+    -deal with structural hazards
+    -use valid/empty bits to specify if 
+        -contents of latch are valid for use by the stage to its right
+        -latch is available to be written into by the stage to its left
+    -used to pass info from stage to stage
+    -each latch has a producer stage and a consumer stage
+    -flags maintained to ensure that 
+        -producer does not overwrite needed latch contents
+        -consumer does not read stale latch contents
+    -STRUCT USED TO REPRESENT LATCH CONTENTS  
+
+
+-Maintain a counter to represent clock value
+-each time counter increments, call stages in reverse order WB MEM EX ID IF 
+-use Assertions (lol)
+
+-Syntax error checking
+    -isAReg(char *s) 
+        -check if it is a valid register name or number 
+    -isImmOperand(char *s)
+        -check if the character string is a number within the allowed range (check if it can be expressed in 16 bits)
+    -memAccessFormat(char *s)
+        -check if the number(register) format is followed for a load or store instruction (check that the last field has the correct syntax: number(register))
+
+
+Start of a cycle
+-need to keep track of whether there is a hazard or a multi-cycle instruction
+    -can do this by creating a state variable for each stage
+    -1 if busy, 0 is free
+    -if free is there another instruction for this stage in the latch
+
+End of cycle
+-change flags
+-can result of stages operation be moved into latch
+
+
+
+    
+
+
+
+
+
