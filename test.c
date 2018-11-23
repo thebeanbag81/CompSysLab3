@@ -53,7 +53,7 @@ void main(){
            else{
                int k = 0;
                while(paren[k]!=NULL){
-                   if((paren[k]==')') || (paren[k]=='(')) {paren[k]=NULL;}
+                   if((paren[k]==')') || (paren[k]=='(')) {paren[k]=' ';}
 		   k++;
                }
            }
