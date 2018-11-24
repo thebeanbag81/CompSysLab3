@@ -29,7 +29,7 @@ main (int argc, char *argv[]){
     /**************************************/
 
 	//opcode
-	enum opcode {add,addi,sub,mult,beq,lw,sw,haltSim};
+	enum opcode {add,addi,sub,mul,beq,lw,sw,haltSim};
 
 	struct instr{
 		//rtype example
@@ -206,11 +206,23 @@ main (int argc, char *argv[]){
 
     //to check if it is a valid register name or number
     int isAReg(char* s){
+        if(isalpha(s[0])){
+            switch(s){
+                case 
+            }
+        }
 
     }
     //to check if the character string is a number within the allowed range
+    //at moment assumes ONLY POSITIVE immediate values
     int isImmOperand(char* s){
-
+        long immediate = (int) *s;
+        if(immediate<65536){ //if it's a valid immediate number
+            return immediate; //return it back
+        }
+        else{ //if it isn't
+            return -1; //return the error code
+        }
     }
 
     //to check if the number(register) format is followed for a load or store instruction.
