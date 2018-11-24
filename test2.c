@@ -5,10 +5,11 @@
 #include <ctype.h>
 #include <string.h>
 
-int reg;
+
 int main(void){
 	
-	char prog[] = "$at"; //16
+	int reg;
+	char prog[] = "$ra"; //16
 	char delim[] = {'$',' '}; //splits takes input from $ to space
         char *inst = strtok(prog,delim);
 	reg = -1;
@@ -18,7 +19,7 @@ int main(void){
             //ERROR
             return NULL;
         }
-        else if((strcmp(inst,"zero")==0) || (prog[0]!='$') || (strlen(inst)>3)){
+        else if((prog[0]!='$') || (strlen(inst)>5)){
             //ERROR
             return NULL;
         }
