@@ -9,6 +9,61 @@
 #define SINGLE 1
 #define BATCH 0
 #define REG_NUM 32
+
+enum opcode {add,addi,sub,mul,beq,lw,sw,haltSim};
+
+int registers[32];
+
+void initReg(void){
+    registers[0]=0
+}
+
+struct instr{
+    //rtype example
+    //add $s1 $s2 $s2 adds contents of register $s1 to $s2
+
+    //itype example
+    //lw $t1 4($s0)
+    //addi $a0 $t2 33
+
+    enum opcode opcode; //what function
+    int rs; //source data
+    int rt; //source data
+    int rd; //destination for result
+    int func; //function
+    int immediate; //
+}
+
+struct latch{
+    struct instr instruction;
+    int data;
+    int read;
+    int write;
+}
+
+struct latch IFID;
+struct latch IDEX;
+struct latch EXMEM;
+struct latch MEMWB;
+
+void latchinit(void){
+    IFID.write = 1;
+    IFID.read = 0
+    IFID.data = 0;
+
+    IDEX.write = 1;
+    IDEX.read = 0
+    IDEX.data = 0;
+
+    EXMEM.write = 1;
+    EXMEM.read = 0
+    EXMEM.data = 0;
+
+    MEMWB.write = 1;
+    MEMWB.read = 0
+    MEMWB.data = 0;
+}
+
 main (int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
@@ -29,57 +84,15 @@ main (int argc, char *argv[]){
     /**************************************/
 
 	//opcode
-	enum opcode {add,addi,sub,mul,beq,lw,sw,haltSim};
 
-	struct instr{
-		//rtype example
-		//add $s1 $s2 $s2 adds contents of register $s1 to $s2
-
-		//itype example
-		//lw $t1 4($s0) 
-		//addi $a0 $t2 33 
-
-		enum opcode opcode; //what function
-		int rs; //source data 
-		int rt; //source data
-		int rd; //destination for result
-		int func; //function 
-		int immediate; //
-	}
 
 	struct instr *IM;
 	long InstructionMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
 	long DataMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
 
-	struct latch{
-		struct instr instruction;
-		int data;
-		int read;
-		int write;
-	}
-	
-	struct latch IFID;
-	struct latch IDEX;
-	struct latch EXMEM;
-	struct latch MEMWB;
+	latchinit();
 
-	void latchinit(void){
-		IFID.write = 1;
-		IFID.read = 0
-		IFID.data = 0;
 
-		IDEX.write = 1;
-		IDEX.read = 0
-		IDEX.data = 0;
-
-		EXMEM.write = 1;
-		EXMEM.read = 0
-		EXMEM.data = 0;
-
-		MEMWB.write = 1;
-		MEMWB.read = 0
-		MEMWB.data = 0;
-	}
 
 
 
@@ -208,7 +221,13 @@ main (int argc, char *argv[]){
     int isAReg(char* s){
         if(isalpha(s[0])){
             switch(s){
-                case 
+                case "zero":
+                    return 0;
+                case "at":
+                    return 1;
+                case "v0":
+                    return 2;
+                    case "v1"
             }
         }
 
@@ -445,8 +464,9 @@ main (int argc, char *argv[]){
 
         }
 
-        if(register=NULL){
+        if(register==NULL){
             //ERROR
+            return "sex";
         }
         else{
             return register;
@@ -477,7 +497,85 @@ main (int argc, char *argv[]){
 
 	}
 
-	int EX(){
+	int EX(struct latch *inL, struct latch *outL){
+
+
+	    switch(inL->instruction.opcode) {
+
+	        case add :
+	            outL->instruction.opcode = inL->instruction.opcode;
+	            outL->instruction.func = inL->instruction.func;
+	            outL->instruction.immediate = inL->instruction.immediate;
+	            outL->instruction.rs = inL->instruction.rs;
+	            outL->instruction.rt = inL->instruction.rt;
+                outL->instruction.rd = inL->instruction.rd
+                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt];
+                break;
+
+	        case sub :
+                outL->instruction.opcode = inL->instruction.opcode;
+                outL->instruction.func = inL->instruction.func;
+                outL->instruction.immediate = inL->instruction.immediate;
+                outL->instruction.rs = inL->instruction.rs;
+                outL->instruction.rt = inL->instruction.rt;
+                outL->instruction.rd = inL->instruction.rd
+                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt];
+                break;
+
+	        case addi :
+                outL->instruction.opcode = inL->instruction.opcode;
+                outL->instruction.func = inL->instruction.func;
+                outL->instruction.immediate = inL->instruction.immediate;
+                outL->instruction.rs = inL->instruction.rs;
+                outL->instruction.rt = inL->instruction.rt;
+                outL->instruction.rd = inL->instruction.rd
+                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt];
+                break;
+
+	        case mul :
+
+                outL->instruction.opcode = inL->instruction.opcode;
+                outL->instruction.func = inL->instruction.func;
+                outL->instruction.immediate = inL->instruction.immediate;
+                outL->instruction.rs = inL->instruction.rs;
+                outL->instruction.rt = inL->instruction.rt;
+                outL->instruction.rd = inL->instruction.rd
+                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt];
+                break;
+
+	        case lw :
+                outL->instruction.opcode = inL->instruction.opcode;
+                outL->instruction.func = inL->instruction.func;
+                outL->instruction.immediate = inL->instruction.immediate;
+                outL->instruction.rs = inL->instruction.rs;
+                outL->instruction.rt = inL->instruction.rt;
+                outL->instruction.rd = inL->instruction.rd
+                registers[outL->instruction.rd] = registers[->instruction.rs]  registers[inL->instruction.rt];
+                break;
+
+	        case sw :
+                outL->instruction.opcode = inL->instruction.opcode;
+                outL->instruction.func = inL->instruction.func;
+                outL->instruction.immediate = inL->instruction.immediate;
+                outL->instruction.rs = inL->instruction.rs;
+                outL->instruction.rt = inL->instruction.rt;
+                outL->instruction.rd = inL->instruction.rd
+                registers[outL->instruction.rd] = registers[->instruction.rs] + registers[inL->instruction.rt];
+                break;
+
+	        case beq :
+                outL->instruction.opcode = inL->instruction.opcode;
+                outL->instruction.func = inL->instruction.func;
+                outL->instruction.immediate = inL->instruction.immediate;
+                outL->instruction.rs = inL->instruction.rs;
+                outL->instruction.rt = inL->instruction.rt;
+                outL->instruction.rd = inL->instruction.rd
+                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt];
+                break;
+
+	    }
+
+
 
 	}
 
