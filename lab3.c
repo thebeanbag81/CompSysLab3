@@ -219,28 +219,17 @@ main (int argc, char *argv[]){
 
     //to check if it is a valid register name or number
     int isAReg(char* s){
-        if(isalpha(s[0])){
-            switch(s){
-                case "zero":
-                    return 0;
-                case "at":
-                    return 1;
-                case "v0":
-                    return 2;
-                    case "v1"
-            }
-        }
-
+        
     }
+
     //to check if the character string is a number within the allowed range
-    //at moment assumes ONLY POSITIVE immediate values
     int isImmOperand(char* s){
         long immediate = (int) *s;
-        if(immediate<65536){ //if it's a valid immediate number
+        if((immediate>=-32768) && (immediate <= 32767)){ //if it's a valid immediate number
             return immediate; //return it back
         }
         else{ //if it isn't
-            return -1; //return the error code
+            return NULL;
         }
     }
 
@@ -499,78 +488,52 @@ main (int argc, char *argv[]){
 
 	int EX(struct latch *inL, struct latch *outL){
 
+	    //if()
+
 
 	    switch(inL->instruction.opcode) {
 
 	        case add :
-	            outL->instruction.opcode = inL->instruction.opcode;
-	            outL->instruction.func = inL->instruction.func;
-	            outL->instruction.immediate = inL->instruction.immediate;
-	            outL->instruction.rs = inL->instruction.rs;
-	            outL->instruction.rt = inL->instruction.rt;
-                outL->instruction.rd = inL->instruction.rd
-                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt];
+                outL->instruction = inL->instruction;
+
+                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt]; //data is the addition of the values
                 break;
 
 	        case sub :
-                outL->instruction.opcode = inL->instruction.opcode;
-                outL->instruction.func = inL->instruction.func;
-                outL->instruction.immediate = inL->instruction.immediate;
-                outL->instruction.rs = inL->instruction.rs;
-                outL->instruction.rt = inL->instruction.rt;
-                outL->instruction.rd = inL->instruction.rd
-                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt];
+                outL->instruction = inL->instruction;
+
+                outL->data  = registers[inL->instruction.rs] - registers[inL->instruction.rt]; //data is the subtraction of the values
                 break;
 
 	        case addi :
-                outL->instruction.opcode = inL->instruction.opcode;
-                outL->instruction.func = inL->instruction.func;
-                outL->instruction.immediate = inL->instruction.immediate;
-                outL->instruction.rs = inL->instruction.rs;
-                outL->instruction.rt = inL->instruction.rt;
-                outL->instruction.rd = inL->instruction.rd
-                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt];
+                outL->instruction = inL->instruction;
+
+                outL->data  = registers[inL->instruction.rs] + inL->instruction.immediate; //data is the addition of the register and immediate value
                 break;
 
 	        case mul :
 
-                outL->instruction.opcode = inL->instruction.opcode;
-                outL->instruction.func = inL->instruction.func;
-                outL->instruction.immediate = inL->instruction.immediate;
-                outL->instruction.rs = inL->instruction.rs;
-                outL->instruction.rt = inL->instruction.rt;
-                outL->instruction.rd = inL->instruction.rd
-                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt];
+                outL->instruction = inL->instruction;
+
+                outL->data  = registers[inL->instruction.rs] * registers[inL->instruction.rt]; //data is the multiplication of the values
                 break;
 
 	        case lw :
-                outL->instruction.opcode = inL->instruction.opcode;
-                outL->instruction.func = inL->instruction.func;
-                outL->instruction.immediate = inL->instruction.immediate;
-                outL->instruction.rs = inL->instruction.rs;
-                outL->instruction.rt = inL->instruction.rt;
-                outL->instruction.rd = inL->instruction.rd
-                registers[outL->instruction.rd] = registers[->instruction.rs]  registers[inL->instruction.rt];
+                outL->instruction = inL->instruction;
+
+                outL->data = outL->instruction.rs + outL->instruction.immediate; //data is the resultant location of word to be loaded
                 break;
 
 	        case sw :
-                outL->instruction.opcode = inL->instruction.opcode;
-                outL->instruction.func = inL->instruction.func;
-                outL->instruction.immediate = inL->instruction.immediate;
-                outL->instruction.rs = inL->instruction.rs;
-                outL->instruction.rt = inL->instruction.rt;
-                outL->instruction.rd = inL->instruction.rd
-                registers[outL->instruction.rd] = registers[->instruction.rs] + registers[inL->instruction.rt];
-                break;
+                outL->instruction = inL->instruction;
+
+                outL->data = outL->instruction.rs + outL->instruction.immediate; //data is the resultant location of word to be stored
+                // break;
 
 	        case beq :
-                outL->instruction.opcode = inL->instruction.opcode;
-                outL->instruction.func = inL->instruction.func;
-                outL->instruction.immediate = inL->instruction.immediate;
-                outL->instruction.rs = inL->instruction.rs;
-                outL->instruction.rt = inL->instruction.rt;
-                outL->instruction.rd = inL->instruction.rd
-                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt];
+                outL->instruction = inL->instruction;
+
+                outL->data  = registers[inL->instruction.rs] - registers[inL->instruction.rt]; //data is the difference between the two registers
                 break;
 
 	    }
