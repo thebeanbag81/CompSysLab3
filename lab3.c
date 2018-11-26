@@ -36,7 +36,7 @@ enum opcode {add,addi,sub,mul,beq,lw,sw,haltSim};
 int registers[32];
 
 void initReg(void){
-    registers[0]=0
+    registers[0]=0;
 }
 
 struct instr{
@@ -52,14 +52,16 @@ struct instr{
     int rt; //source data
     int rd; //destination for result
     int immediate; //
-}
+};
 
 struct latch{
     struct instr instruction;
     int data;
     int read;
     int write;
-}
+};
+
+struct instr *InstructionMem;
 
 struct latch IFID;
 struct latch IDEX;
@@ -68,21 +70,23 @@ struct latch MEMWB;
 
 void latchinit(void){
     IFID.write = 1;
-    IFID.read = 0
+    IFID.read = 0;
     IFID.data = 0;
 
     IDEX.write = 1;
-    IDEX.read = 0
+    IDEX.read = 0;
     IDEX.data = 0;
 
     EXMEM.write = 1;
-    EXMEM.read = 0
+    EXMEM.read = 0;
     EXMEM.data = 0;
 
     MEMWB.write = 1;
-    MEMWB.read = 0
+    MEMWB.read = 0;
     MEMWB.data = 0;
 }
+
+struct instr parser(char *input);
 
 main (int argc, char *argv[]){
 	
@@ -148,7 +152,7 @@ main (int argc, char *argv[]){
             count = count + 1;} 
     }
 	/********************************************************************************/
-    struct instr *InstructionMem = (struct inst*)malloc(count*sizeof(struct instr));
+    InstructionMem = (struct inst*)malloc(count*sizeof(struct instr));
     char *lines;
     lines=malloc(250*sizeof(char));
     rewind(input);
@@ -161,6 +165,9 @@ main (int argc, char *argv[]){
 
 	//add the following code to the end of the simulation, 
         //to output statistics in batch mode
+
+	double ifUtil, idUtil, exUtil, memUtil, wbUtil;		
+	
 	if(sim_mode==0){
 		fprintf(output,"program name: %s\n",argv[5]);
 		fprintf(output,"stage utilization: %f  %f  %f  %f  %f \n",
@@ -180,7 +187,7 @@ main (int argc, char *argv[]){
 	fclose(input);
 	fclose(output);
 	return 0;
-}
+
   /********************************************************************************/
 
 }
@@ -453,10 +460,11 @@ main (int argc, char *argv[]){
         //reg number out of bounds 
         //immediate field too large
     /******************************************************************/
-struct instruction parser(char *input){
+  struct instr parser(char *input){
     
          //char array[] = "addi $s0 $s1 8"; 
-        char formArray[] = progScanner(array);
+        char *formArray;
+        formArray = progScanner(input);
 
         char delimiters[] = {' '}; //delimiter array
         char **token;
@@ -464,7 +472,7 @@ struct instruction parser(char *input){
         
         int i = 0;
 	    token[0]=(char*)malloc(256*sizeof(char));
-        token[i] = strtok(formStr,delimiters);
+        token[i] = strtok(formArray,delimiters);
     
         while(token[i]!=NULL){
         token[++i]=(char*)malloc(256*sizeof(char));   
@@ -511,9 +519,7 @@ case 'm':
 {
 if(op[1]=='u'){
   	if(op[2]=='l'){
-	   if(op[3]=='t'){
-		inst.opcode=mult;
-			}
+		inst.opcode=mul;	
 		}
 	}
 else printf("Illegal Opcode"); exit(0);
@@ -523,7 +529,7 @@ case 'b':
 {
 if(op[1]=='e'){
   	if(op[2]=='q'){
-	   inst.opcode=mult;
+	   inst.opcode=beq;
 		}
 	}
 else printf("Illegal Opcode"); exit(0);
@@ -532,7 +538,7 @@ break;
 case 'l':
 {
 if(op[1]=='w'){
-  inst.opcode=mult;
+  inst.opcode=lw;
 	}
 else printf("Illegal Opcode"); exit(0);
 }
@@ -541,30 +547,30 @@ break;
 
 
 if(inst.opcode == lw || inst.opcode == sw){
-instr.rt = regNumberConverter(token[1]);
+inst.rt = regNumberConverter(token[1]);
 if(isImmOperand(token[2])>=0) inst.immediate = atoi(token[2]);
 else printf("Immediate field too large"); exit(0);
-instr.rs = regNumberConverter(token[3]);
+inst.rs = regNumberConverter(token[3]);
 }
 
 else if(inst.opcode == beq){
-instr.rs = regNumberConverter(token[1]);
-instr.rt = regNumberConverter(token[2]);
-if(isImmOperand(token[3]>=0) inst.immediate = atoi(token[3]);
+inst.rs = regNumberConverter(token[1]);
+inst.rt = regNumberConverter(token[2]);
+if(isImmOperand(token[3])>=0) inst.immediate = atoi(token[3]);
 else printf("Immediate field too large"); exit(0);
 }
 
 else if(inst.opcode == addi){
-instr.rt = regNumberConverter(token[1]);
-instr.rs = regNumberConverter(token[2]);
-if(isImmOperand(token[3]>=0) inst.immediate = atoi(token[3]);
+inst.rt = regNumberConverter(token[1]);
+inst.rs = regNumberConverter(token[2]);
+if(isImmOperand(token[3])>=0) inst.immediate = atoi(token[3]);
 else printf("Immediate field too large"); exit(0);
 }
 
 else{
-instr.rd = regNumberConverter(token[1]);
-instr.rs = regNumberConverter(token[2]);
-instr.rt = regNumberConverter(token[3]); 
+inst.rd = regNumberConverter(token[1]);
+inst.rs = regNumberConverter(token[2]);
+inst.rt = regNumberConverter(token[3]); 
 }
 
 return inst;
@@ -574,11 +580,11 @@ return inst;
 	int IF(){
          IFID.write = 1;
     IFID.read = 0;
-    if (IFID.clock%c != 0) { //check to see if the program cycle and the latch cycle match: if not sends an error.
+    if (sim_cycle%c != 0) { //check to see if the program cycle and the latch cycle match: if not sends an error.
         return NULL;
     }
     else { //for everything else, load the latch with the instruction from memory
-        IFID.instruction = instructionMem[pgm_c/4];
+        IFID.instruction = InstructionMem[pgm_c/4];
     }
 	}
 
@@ -588,14 +594,14 @@ return inst;
     IDEX.read = 0;
     IDEX.write = 1;
     if ((IFID.instruction.opcode == haltSim)) { //first check if the instruction opcode is a simulation stop. Pass it through if it is.
-        IDEX.instruction = IFID->instruction;
+        IDEX.instruction = IFID.instruction;
         IDEX.read = IFID.read;
         IDEX.write = IFID.write;
         IDEX.data = IFID.data;
-        IDEX.clock = IFID.clock;
+        //IDEX.clock = IFID.clock;
     }
         //NEED TO HAVE A FLAG-TYPE STOP HERE
-    else if ((IFID->instruction.opcode == add) || (IFID.instruction.opcode == sub)  || (IFID.instruction.opcode == mult)) { //add, sub, and mult opcodes will follow this statement
+    else if ((IFID.instruction.opcode == add) || (IFID.instruction.opcode == sub)  || (IFID.instruction.opcode == mul)) { //add, sub, and mult opcodes will follow this statement
         IDEX.instruction.opcode = IFID.instruction.opcode;
         IDEX.instruction.rd = IFID.instruction.rd;
         IDEX.instruction.rs = IFID.instruction.rs;
@@ -629,12 +635,12 @@ return inst;
 	}
 
 	int EX(struct latch *inL, struct latch *outL){
-        if(((cycle%m) == 0) && (IDEX.instruction.opcode == mul) || ((cycle%n) == 0) && (IDEX.instruction.opcode != mul) {
+        if(((sim_cycle%m) == 0) && (IDEX.instruction.opcode == mul) || ((sim_cycle%n) == 0) && (IDEX.instruction.opcode != mul)) {
 
         if(IDEX.instruction.opcode == mul){EX_counter+=m;}
         else{EX_counter+=n;}
 
-        switch (IDEX->instruction.opcode) {
+        switch (IDEX.instruction.opcode) {
 
             case add :
                 EXMEM.instruction = IDEX.instruction;
@@ -658,7 +664,6 @@ return inst;
                 break;
 
             case mul :
-                IDEX.instruction
                 EXMEM.instruction = IDEX.instruction;
                 EXMEM.data =
                         mips_reg[IDEX.instruction.rs] *
@@ -666,27 +671,25 @@ return inst;
                 break;
 
             case lw :
-                EXMEM.instruction = IDEX->instruction;
-                outL.data = outL.instruction.rs +
-                            outL.instruction.immediate; //data is the resultant location of word to be loaded
+                EXMEM.instruction = IDEX.instruction;
+                EXMEM.data = EXMEM.instruction.rs +
+                            EXMEM.instruction.immediate; //data is the resultant location of word to be loaded
                 break;
 
             case sw :
                 EXMEM.instruction = IDEX.instruction;
-                outL.data = outL.instruction.rs +
-                            outL.instruction.immediate; //data is the resultant location of word to be stored
+                EXMEM.data = EXMEM.instruction.rs +
+                            EXMEM.instruction.immediate; //data is the resultant location of word to be stored
                 break;
 
             case beq :
                 EXMEM.instruction = IDEX.instruction;
-                outL.data = mips_reg[inL.instruction.rs] -
-                            mips_reg[inL.instruction.rt]; //data is the difference between the two registers
+                EXMEM.data = mips_reg[IDEX.instruction.rs] -
+                            mips_reg[IDEX.instruction.rt]; //data is the difference between the two registers
                 break;
 
         }
-    }
-
-
+  
 	}
 
 	void MEM() {
@@ -721,3 +724,4 @@ int WB(struct latch *inL) {
 
 }
 
+}
