@@ -9,6 +9,61 @@
 #define SINGLE 1
 #define BATCH 0
 #define REG_NUM 32
+
+enum opcode {add,addi,sub,mul,beq,lw,sw,haltSim};
+
+int registers[32];
+
+void initReg(void){
+    registers[0]=0
+}
+
+struct instr{
+    //rtype example
+    //add $s1 $s2 $s2 adds contents of register $s1 to $s2
+
+    //itype example
+    //lw $t1 4($s0)
+    //addi $a0 $t2 33
+
+    enum opcode opcode; //what function
+    int rs; //source data
+    int rt; //source data
+    int rd; //destination for result
+    int func; //function
+    int immediate; //
+}
+
+struct latch{
+    struct instr instruction;
+    int data;
+    int read;
+    int write;
+}
+
+struct latch IFID;
+struct latch IDEX;
+struct latch EXMEM;
+struct latch MEMWB;
+
+void latchinit(void){
+    IFID.write = 1;
+    IFID.read = 0
+    IFID.data = 0;
+
+    IDEX.write = 1;
+    IDEX.read = 0
+    IDEX.data = 0;
+
+    EXMEM.write = 1;
+    EXMEM.read = 0
+    EXMEM.data = 0;
+
+    MEMWB.write = 1;
+    MEMWB.read = 0
+    MEMWB.data = 0;
+}
+
 main (int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
@@ -29,56 +84,14 @@ main (int argc, char *argv[]){
     /**************************************/
 
 	//opcode
-	enum opcode {add,addi,sub,mult,beq,lw,sw,haltSim};
 
-	struct instr{
-		//rtype example
-		//add $s1 $s2 $s2 adds contents of register $s1 to $s2
-
-		//itype example
-		//lw $t1 4($s0) 
-		//addi $a0 $t2 33 
-
-		enum opcode opcode; //what function
-		int rs; //source data 
-		int rt; //source data
-		int rd; //destination for result
-		int func; //function 
-		int immediate; //
-	}
 
 	struct instr InstructionMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
 	long DataMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
 
-	struct latch{
-		struct instr instruction;
-		int data;
-		int read;
-		int write;
-	}
-	
-	struct latch IFID;
-	struct latch IDEX;
-	struct latch EXMEM;
-	struct latch MEMWB;
+	latchinit();
 
-	void latchinit(void){
-		IFID.write = 1;
-		IFID.read = 0
-		IFID.data = 0;
 
-		IDEX.write = 1;
-		IDEX.read = 0
-		IDEX.data = 0;
-
-		EXMEM.write = 1;
-		EXMEM.read = 0
-		EXMEM.data = 0;
-
-		MEMWB.write = 1;
-		MEMWB.read = 0
-		MEMWB.data = 0;
-	}
 
 
 
@@ -202,6 +215,28 @@ main (int argc, char *argv[]){
   /********************************************************************************/
 
 }
+
+    //to check if it is a valid register name or number
+    int isAReg(char* s){
+        
+    }
+
+    //to check if the character string is a number within the allowed range
+    int isImmOperand(char* s){
+        long immediate = (int) *s;
+        if((immediate>=-32768) && (immediate <= 32767)){ //if it's a valid immediate number
+            return immediate; //return it back
+        }
+        else{ //if it isn't
+            return NULL;
+        }
+    }
+
+    //to check if the number(register) format is followed for a load or store instruction.
+    int memAccessFormat(char *s){
+
+    }
+
 
 	/*********************************************/
 	//progScanner
@@ -434,6 +469,7 @@ main (int argc, char *argv[]){
 
         }
 
+
         if(reg==-1){
             return NULL;
         }
@@ -577,7 +613,59 @@ return inst;
 
 	}
 
-	int EX(){
+	int EX(struct latch *inL, struct latch *outL){
+
+	    //if()
+
+
+	    switch(inL->instruction.opcode) {
+
+	        case add :
+                outL->instruction = inL->instruction;
+
+                outL->data  = registers[inL->instruction.rs] + registers[inL->instruction.rt]; //data is the addition of the values
+                break;
+
+	        case sub :
+                outL->instruction = inL->instruction;
+
+                outL->data  = registers[inL->instruction.rs] - registers[inL->instruction.rt]; //data is the subtraction of the values
+                break;
+
+	        case addi :
+                outL->instruction = inL->instruction;
+
+                outL->data  = registers[inL->instruction.rs] + inL->instruction.immediate; //data is the addition of the register and immediate value
+                break;
+
+	        case mul :
+
+                outL->instruction = inL->instruction;
+
+                outL->data  = registers[inL->instruction.rs] * registers[inL->instruction.rt]; //data is the multiplication of the values
+                break;
+
+	        case lw :
+                outL->instruction = inL->instruction;
+
+                outL->data = outL->instruction.rs + outL->instruction.immediate; //data is the resultant location of word to be loaded
+                break;
+
+	        case sw :
+                outL->instruction = inL->instruction;
+
+                outL->data = outL->instruction.rs + outL->instruction.immediate; //data is the resultant location of word to be stored
+                // break;
+
+	        case beq :
+                outL->instruction = inL->instruction;
+
+                outL->data  = registers[inL->instruction.rs] - registers[inL->instruction.rt]; //data is the difference between the two registers
+                break;
+
+	    }
+
+
 
 	}
 
