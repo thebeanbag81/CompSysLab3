@@ -466,6 +466,8 @@ main (int argc, char *argv[]){
 	}
 
 	void IF(struct latch *thisL){
+	    thisL->write = 1;
+	    thisL->read = 0;
 	    if (thisL->cycle%c != 0) { //check to see if the program cycle and the latch cycle match: if not sends an error.
 	        return NULL;
 	    }
@@ -475,6 +477,10 @@ main (int argc, char *argv[]){
 	}
 
 	int ID(struct latch *inL, struct latch *outL){
+	    inL->read = 1;
+	    inL->write = 0;
+	    outL->read = 0;
+	    outL->write = 1;
 	    if (strcmp(inL->instruction.opcode, haltSim) = 0) { //first check if the instruction opcode is a simulation stop. Pass it through if it is.
             outL->instruction = inL->instruction;
             outL->read = inL->read;
@@ -520,8 +526,23 @@ main (int argc, char *argv[]){
 
 	}
 
-	int MEM(){
-
+	int MEM(struct latch *inL, struct latch *outL) {
+	    if (strcmp(inL->instruction.opcode, lw) != 0 || strcmp(inL->instruction.opcode, sw) != 0) {
+	        outL->instruction = inL->instruction;
+	        DataMem[pgm_c/4] = inL->data;
+	    }
+	    else if (strcmp(inL->instruction.opcode, lw) == 0) { //lw and sw opcodes will follow this statement
+	        outL->instruction.opcode = inL->instruction.opcode;
+	        outL->instruction.immediate = inL->instruction.immediate;
+	        outL->instruction.rt = inL->instruction.rt;
+	        outL->instruction.rs = inL->instruction.rs;
+	    }
+	    else if (strcmp(inL->instruction.opcode, sw) == 0) { //addi will follow this statement
+	    /*    outL->instruction.opcode = inL->instruction.opcode;
+	        outL->instruction.immediate = inL->instruction.immediate;
+	        outL->instruction.rt = inL->instruction.rt;
+	        outL->instruction.rs = inL->instruction.rs; */
+	    }
 	}
 
 	int WB(){
