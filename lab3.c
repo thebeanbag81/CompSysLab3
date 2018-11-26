@@ -10,7 +10,7 @@
 #define BATCH 0
 #define REG_NUM 32
 
-long InstructionMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
+struct instr InstructionMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
 long DataMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
 
 enum opcode {
@@ -474,52 +474,55 @@ struct instruction parser(char *input) {
 
 
 void IF(){
-    IFID.write = 1;
-    IFID.read = 0;
     if (sim_cycle%c != 0) { //check to see if the program and the latch cycle match: if not sends an error.
-
+        continue;
     }
     else { //for everything else, load the latch with the instruction from memory
         IFID.instruction = instructionMem[pgm_c/4];
+        IF_counter++;
     }
-}
-
-int ID(){
     IFID.read = 1;
     IFID.write = 0;
-    IDEX.read = 0;
-    IDEX.write = 1;
-    if ((IFID.instruction.opcode == haltSim)) { //first check if the instruction opcode is a simulation stop. Pass it through if it is.
+}
+
+void ID(){
+    if (IFID.write = 1) {
+
+    }
+    else if ((IFID.instruction.opcode == haltSim)) { //first check if the instruction opcode is a simulation stop. Pass it through if it is.
         IDEX.instruction = IFID->instruction;
         IDEX.read = IFID.read;
         IDEX.write = IFID.write;
         IDEX.data = IFID.data;
-        IDEX.clock = IFID.clock;
     }
         //NEED TO HAVE A FLAG-TYPE STOP HERE
-    else if ((IFID->instruction.opcode == add) || (IFID.instruction.opcode == sub)  || (IFID.instruction.opcode == mult)) { //add, sub, and mult opcodes will follow this statement
+    else if ((IFID->instruction.opcode == add) || (IFID.instruction.opcode == sub)  || (IFID.instruction.opcode == mul)) { //add, sub, and mult opcodes will follow this statement
         IDEX.instruction.opcode = IFID.instruction.opcode;
         IDEX.instruction.rd = IFID.instruction.rd;
         IDEX.instruction.rs = IFID.instruction.rs;
         IDEX.instruction.rt = IFID.instruction.rt;
+        ID_counter++;
     }
     else if ((IFID.instruction.opcode == lw) || (IFID.instruction.opcode == sw)) { //lw and sw opcodes will follow this statement
         IDEX.instruction.opcode = IFID.instruction.opcode;
         IDEX.instruction.immediate = IFID.instruction.immediate;
         IDEX.instruction.rt = IFID.instruction.rt;
         IDEX.instruction.rs = IFID.instruction.rs;
+        ID_counter++;
     }
     else if ((IFID.instruction.opcode == addi)) { //addi will follow this statement
         IDEX.instruction.opcode = IFID.instruction.opcode;
         IDEX.instruction.immediate = IFID.instruction.immediate;
         IDEX.instruction.rt = IFID.instruction.rt;
         IDEX.instruction.rs = IFID.instruction.rs;
+        ID_counter++;
     }
     else if ((IFID.instruction.opcode == beq)) { //beq will follow this statement
         IDEX.instruction.opcode = IFID.instruction.opcode;
         IDEX.instruction.immediate = IFID.instruction.immediate;
         IDEX.instruction.rt = IFID.instruction.rt;
         IDEX.instruction.rs = IFID.instruction.rs;
+        ID_counter++;
     }
     else { //any stall that needs to happen will be done here: it will subtract 0 so that no numbers change.
         IDEX.instruction.opcode = sub;
@@ -528,6 +531,10 @@ int ID(){
         IDEX.instruction.rs = 0;
         IDEX.instruction.rd = 0;
     }
+    IFID.read = 0;
+    IFID.write = 1;
+    IDEX.read = 1;
+    IDEX.write = 0;
 }
 
 int EX() {
@@ -591,22 +598,28 @@ int EX() {
 }
 
 void MEM() {
+    EXMEM.read = 1;
+    EXMEM.write = 0;
+    MEMWB.read = 0;
+    MEMWB.write = 1;
     if ((EXMEM.instruction.opcode != lw)  || (EXMEM.instruction.opcode != sw)) {
         MEMWB.instruction = EXMEM.instruction;
+        MEMWB.data = EXMEM.data;
+    }
+    else if ((EXMEM.instruction.opcode == sw)) { //lw and sw opcodes will follow this statement
+        MEMWB.instruction = EXMEM.instruction;
         DataMem[pgm_c/4] = EXMEM.data;
+        MEM_counter++;
     }
-    else if ((EXMEM.instruction.opcode == lw)) { //lw and sw opcodes will follow this statement
-        MEMWB.instruction.opcode = EXMEM.instruction.opcode;
-        MEMWB.instruction.immediate = EXMEM.instruction.immediate;
-        MEMWB.instruction.rt = EXMEM.instruction.rt;
-        MEMWB.instruction.rs = EXMEM.instruction.rs;
+    else if ((EXMEM.instruction.opcode == lw)) { //addi will follow this statement
+        MEMWB.instruction = EXMEM.instruction;
+        MEMWB.data = DataMem[pgm_c/4];
+        MEM_counter++;
     }
-    else if ((EXMEM.instruction.opcode == sw)) { //addi will follow this statement
-        /*    outL->instruction.opcode = inL->instruction.opcode;
-            outL->instruction.immediate = inL->instruction.immediate;
-            outL->instruction.rt = inL->instruction.rt;
-            outL->instruction.rs = inL->instruction.rs; */
-    }
+    EXMEM.read = 0;
+    EXMEM.write = 1;
+    MEMWB.read = 1;
+    MEMWB.write = 0;
 }
 
 int WB(struct latch *inL) {
