@@ -492,16 +492,27 @@ main (int argc, char *argv[]){
 	    else if (strcmp(inL->instruction.opcode, lw) == 0 || strcmp(inL->instruction.opcode, sw) == 0) { //lw and sw opcodes will follow this statement
 	        outL->instruction.opcode = inL->instruction.opcode;
 	        outL->instruction.immediate = inL->instruction.immediate;
-
+	        outL->instruction.rt = inL->instruction.rt;
+	        outL->instruction.rs = inL->instruction.rs;
 	    }
 	    else if (strcmp(inL->instruction.opcode, addi) == 0) { //addi will follow this statement
-
+	        outL->instruction.opcode = inL->instruction.opcode;
+	        outL->instruction.immediate = inL->instruction.immediate;
+	        outL->instruction.rt = inL->instruction.rt;
+	        outL->instruction.rs = inL->instruction.rs;
 	    }
 	    else if (strcmp(inL->instruction.opcode, beq) == 0) { //beq will follow this statement
-
+	        outL->instruction.opcode = inL->instruction.opcode;
+	        outL->instruction.immediate = inL->instruction.immediate;
+	        outL->instruction.rt = inL->instruction.rt;
+	        outL->instruction.rs = inL->instruction.rs;
 	    }
 	    else { //any stall that needs to happen will be done here: it will subtract 0 so that no numbers change.
-
+	        outL->instruction.opcode = sub;
+	        outL->instruction.immediate = 0;
+	        outL->instruction.rt = 0;
+	        outL->instruction.rs = 0;
+	        outL->instruction.rd = 0;
 	    }
 	}
 
