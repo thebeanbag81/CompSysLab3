@@ -1,4 +1,3 @@
-
 // List the full names of ALL group members at the top of your code.
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,10 +5,13 @@
 #include <math.h>
 #include <assert.h>
 #include <ctype.h>
-//feel free to add here any additional library names you may need 
+//feel free to add here any additional library names you may need
 #define SINGLE 1
 #define BATCH 0
 #define REG_NUM 32
+
+long InstructionMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
+long DataMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
 
 enum opcode {
     add, addi, sub, mul, beq, lw, sw, haltSim
@@ -49,27 +51,29 @@ struct latch MEMWB;
 
 void latchinit(void) {
     IFID.write = 1;
-    IFID.read = 0
+    IFID.read = 0;
     IFID.data = 0;
 
     IDEX.write = 1;
-    IDEX.read = 0
+    IDEX.read = 0;
     IDEX.data = 0;
 
     EXMEM.write = 1;
-    EXMEM.read = 0
+    EXMEM.read = 0;
     EXMEM.data = 0;
 
     MEMWB.write = 1;
-    MEMWB.read = 0
+    MEMWB.read = 0;
     MEMWB.data = 0;
 }
+int c, m, n;
+long mips_reg[REG_NUM];
 
 main(int argc, char *argv[]) {
     int sim_mode = 0;//mode flag, 1 for single-cycle, 0 for batch
-    int c, m, n;
+
     int i;//for loop counter
-    long mips_reg[REG_NUM];
+
     long pgm_c = 0;//program counter
     long sim_cycle = 0;//simulation cycle counter
     //define your own counter for the usage of each pipeline stage here
@@ -88,8 +92,7 @@ main(int argc, char *argv[]) {
 
 
     struct instr *IM;
-    long InstructionMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
-    long DataMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
+
 
     latchinit();
 
@@ -226,9 +229,9 @@ int isImmOperand(char *s) {
 }
 
 //to check if the number(register) format is followed for a load or store instruction.
-int memAccessFormat(char *s) {
+/*int memAccessFormat(char *s) {
 
-}
+}*/
 
 /*********************************************/
 //progScanner
@@ -446,7 +449,7 @@ char *regNumberConverter(char *prog) {
 
     if (register==NULL){
         //ERROR
-        return "sex";
+        return "invalid";
     }
     else{
         return register;
@@ -470,146 +473,148 @@ struct instruction parser(char *input) {
 }
 
 
-	void IF(){
-	    IFID.write = 1;
-	    IFID.read = 0;
-	    if (IFID.clock%c != 0) { //check to see if the program cycle and the latch cycle match: if not sends an error.
-	        return NULL;
-	    }
-	    else { //for everything else, load the latch with the instruction from memory
-            IFID.instruction = instructionMem[pgm_c/4];
-	    }
-	}
+void IF(){
+    IFID.write = 1;
+    IFID.read = 0;
+    if (sim_cycle%c != 0) { //check to see if the program and the latch cycle match: if not sends an error.
 
-	int ID(){
-	    IFID.read = 1;
-        IFID.write = 0;
-	    IDEX.read = 0;
-	    IDEX.write = 1;
-	    if (strcmp(IFID.instruction.opcode, haltSim) = 0) { //first check if the instruction opcode is a simulation stop. Pass it through if it is.
-            IDEX.instruction = IFID->instruction;
-            IDEX.read = IFID.read;
-            IDEX.write = IFID.write;
-            IDEX.data = IFID.data;
-            IDEX.clock = IFID.clock;
-	    }
-	    //NEED TO HAVE A FLAG-TYPE STOP HERE
-	    else if (strcmp(IFID->instruction.opcode, add) == 0 || strcmp(IFID.instruction.opcode, sub) == 0 || strcmp(IFID.instruction.opcode, mult) == 0) { //add, sub, and mult opcodes will follow this statement
-	        IDEX.instruction.opcode = IFID.instruction.opcode;
-	        IDEX.instruction.rd = IFID.instruction.rd;
-	        IDEX.instruction.rs = IFID.instruction.rs;
-	        IDEX.instruction.rt = IFID.instruction.rt;
-	    }
-	    else if (strcmp(IFID.instruction.opcode, lw) == 0 || strcmp(IFID.instruction.opcode, sw) == 0) { //lw and sw opcodes will follow this statement
-	        IDEX.instruction.opcode = IFID.instruction.opcode;
-	        IDEX.instruction.immediate = IFID.instruction.immediate;
-	        IDEX.instruction.rt = IFID.instruction.rt;
-	        IDEX.instruction.rs = IFID.instruction.rs;
-	    }
-	    else if (strcmp(IFID.instruction.opcode, addi) == 0) { //addi will follow this statement
-	        IDEX.instruction.opcode = IFID.instruction.opcode;
-	        IDEX.instruction.immediate = IFID.instruction.immediate;
-	        IDEX.instruction.rt = IFID.instruction.rt;
-	        IDEX.instruction.rs = IFID.instruction.rs;
-	    }
-	    else if (strcmp(IFID.instruction.opcode, beq) == 0) { //beq will follow this statement
-	        IDEX.instruction.opcode = IFID.instruction.opcode;
-	        IDEX.instruction.immediate = IFID.instruction.immediate;
-	        IDEX.instruction.rt = IFID.instruction.rt;
-	        IDEX.instruction.rs = IFID.instruction.rs;
-	    }
-	    else { //any stall that needs to happen will be done here: it will subtract 0 so that no numbers change.
-	        IDEX.instruction.opcode = sub;
-	        IDEX.instruction.immediate = 0;
-	        IDEX.instruction.rt = 0;
-	        IDEX.instruction.rs = 0;
-	        IDEX.instruction.rd = 0;
-	    }
-	}
+    }
+    else { //for everything else, load the latch with the instruction from memory
+        IFID.instruction = instructionMem[pgm_c/4];
+    }
+}
+
+int ID(){
+    IFID.read = 1;
+    IFID.write = 0;
+    IDEX.read = 0;
+    IDEX.write = 1;
+    if ((IFID.instruction.opcode == haltSim)) { //first check if the instruction opcode is a simulation stop. Pass it through if it is.
+        IDEX.instruction = IFID->instruction;
+        IDEX.read = IFID.read;
+        IDEX.write = IFID.write;
+        IDEX.data = IFID.data;
+        IDEX.clock = IFID.clock;
+    }
+        //NEED TO HAVE A FLAG-TYPE STOP HERE
+    else if ((IFID->instruction.opcode == add) || (IFID.instruction.opcode == sub)  || (IFID.instruction.opcode == mult)) { //add, sub, and mult opcodes will follow this statement
+        IDEX.instruction.opcode = IFID.instruction.opcode;
+        IDEX.instruction.rd = IFID.instruction.rd;
+        IDEX.instruction.rs = IFID.instruction.rs;
+        IDEX.instruction.rt = IFID.instruction.rt;
+    }
+    else if ((IFID.instruction.opcode == lw) || (IFID.instruction.opcode == sw)) { //lw and sw opcodes will follow this statement
+        IDEX.instruction.opcode = IFID.instruction.opcode;
+        IDEX.instruction.immediate = IFID.instruction.immediate;
+        IDEX.instruction.rt = IFID.instruction.rt;
+        IDEX.instruction.rs = IFID.instruction.rs;
+    }
+    else if ((IFID.instruction.opcode == addi)) { //addi will follow this statement
+        IDEX.instruction.opcode = IFID.instruction.opcode;
+        IDEX.instruction.immediate = IFID.instruction.immediate;
+        IDEX.instruction.rt = IFID.instruction.rt;
+        IDEX.instruction.rs = IFID.instruction.rs;
+    }
+    else if ((IFID.instruction.opcode == beq)) { //beq will follow this statement
+        IDEX.instruction.opcode = IFID.instruction.opcode;
+        IDEX.instruction.immediate = IFID.instruction.immediate;
+        IDEX.instruction.rt = IFID.instruction.rt;
+        IDEX.instruction.rs = IFID.instruction.rs;
+    }
+    else { //any stall that needs to happen will be done here: it will subtract 0 so that no numbers change.
+        IDEX.instruction.opcode = sub;
+        IDEX.instruction.immediate = 0;
+        IDEX.instruction.rt = 0;
+        IDEX.instruction.rs = 0;
+        IDEX.instruction.rd = 0;
+    }
+}
 
 int EX() {
 
-    //if()
+    if(((cycle%m) == 0) && (IDEX.instruction.opcode == mul) || ((cycle%n) == 0) && (IDEX.instruction.opcode != mul) {
 
 
-    switch (IDEX->instruction.opcode) {
 
-        case add :
-            EXMEM.instruction = IDEX.instruction;
+        switch (IDEX->instruction.opcode) {
 
-            EXMEM.data = mips_reg[IDEX.instruction.rs] +
-                         mips_reg[IDEX.instruction.rt]; //data is the addition of the values
-            break;
+            case add :
+                EXMEM.instruction = IDEX.instruction;
 
-        case sub :
-            EXMEM.instruction = IDEX.instruction;
+                EXMEM.data = mips_reg[IDEX.instruction.rs] +
+                             mips_reg[IDEX.instruction.rt]; //data is the addition of the values
+                break;
 
-            EXMEM.data =
-                    mips_reg[IDEX.instruction.rs] - mips_reg[IDEX.instruction.rt]; //data is the addition of the values
-            break;
+            case sub :
+                EXMEM.instruction = IDEX.instruction;
 
-        case addi :
-            EXMEM.instruction = IDEX.instruction;
-            EXMEM.data =
-                    mips_reg[IDEX.instruction.rs] + IDEX.instruction.immediate; //data is the addition of the values
-            break;
+                EXMEM.data =
+                        mips_reg[IDEX.instruction.rs] -
+                        mips_reg[IDEX.instruction.rt]; //data is the addition of the values
+                break;
 
-        case mul :
-            IDEX.instruction
-            EXMEM.instruction = IDEX.instruction;
-            EXMEM.data =
-                    mips_reg[IDEX.instruction.rs] * mips_reg[IDEX.instruction.rt]; //data is the addition of the values
-            break;
+            case addi :
+                EXMEM.instruction = IDEX.instruction;
+                EXMEM.data =
+                        mips_reg[IDEX.instruction.rs] + IDEX.instruction.immediate; //data is the addition of the values
+                break;
 
-        case lw :
-            EXMEM.instruction = IDEX->instruction;
-            outL.data = outL.instruction.rs +
-                        outL.instruction.immediate; //data is the resultant location of word to be loaded
-            break;
+            case mul :
+                IDEX.instruction
+                EXMEM.instruction = IDEX.instruction;
+                EXMEM.data =
+                        mips_reg[IDEX.instruction.rs] *
+                        mips_reg[IDEX.instruction.rt]; //data is the addition of the values
+                break;
 
-        case sw :
-            EXMEM.instruction = IDEX.instruction;
-            outL.data = outL.instruction.rs +
-                        outL.instruction.immediate; //data is the resultant location of word to be stored
-            break;
+            case lw :
+                EXMEM.instruction = IDEX->instruction;
+                outL.data = outL.instruction.rs +
+                            outL.instruction.immediate; //data is the resultant location of word to be loaded
+                break;
 
-        case beq :
-            EXMEM.instruction = IDEX.instruction;
-            outL.data = mips_reg[inL.instruction.rs] -
-                        mips_reg[inL.instruction.rt]; //data is the difference between the two registers
-            break;
+            case sw :
+                EXMEM.instruction = IDEX.instruction;
+                outL.data = outL.instruction.rs +
+                            outL.instruction.immediate; //data is the resultant location of word to be stored
+                break;
 
+            case beq :
+                EXMEM.instruction = IDEX.instruction;
+                outL.data = mips_reg[inL.instruction.rs] -
+                            mips_reg[inL.instruction.rt]; //data is the difference between the two registers
+                break;
+
+        }
     }
-
 
 }
 
 void MEM() {
-	    if (strcmp(EXMEM.instruction.opcode, lw) != 0 || strcmp(EXMEM.instruction.opcode, sw) != 0) {
-	        MEMWB.instruction = EXMEM.instruction;
-	        DataMem[pgm_c/4] = EXMEM.data;
-	    }
-	    else if (strcmp(EXMEM.instruction.opcode, lw) == 0) { //lw and sw opcodes will follow this statement
-	        MEMWB.instruction.opcode = EXMEM.instruction.opcode;
-	        MEMWB.instruction.immediate = EXMEM.instruction.immediate;
-	        MEMWB.instruction.rt = EXMEM.instruction.rt;
-	        MEMWB.instruction.rs = EXMEM.instruction.rs;
-	    }
-	    else if (strcmp(EXMEM.instruction.opcode, sw) == 0) { //addi will follow this statement
-	    /*    outL->instruction.opcode = inL->instruction.opcode;
-	        outL->instruction.immediate = inL->instruction.immediate;
-	        outL->instruction.rt = inL->instruction.rt;
-	        outL->instruction.rs = inL->instruction.rs; */
-	    }
-	}
+    if ((EXMEM.instruction.opcode != lw)  || (EXMEM.instruction.opcode != sw)) {
+        MEMWB.instruction = EXMEM.instruction;
+        DataMem[pgm_c/4] = EXMEM.data;
+    }
+    else if ((EXMEM.instruction.opcode == lw)) { //lw and sw opcodes will follow this statement
+        MEMWB.instruction.opcode = EXMEM.instruction.opcode;
+        MEMWB.instruction.immediate = EXMEM.instruction.immediate;
+        MEMWB.instruction.rt = EXMEM.instruction.rt;
+        MEMWB.instruction.rs = EXMEM.instruction.rs;
+    }
+    else if ((EXMEM.instruction.opcode == sw)) { //addi will follow this statement
+        /*    outL->instruction.opcode = inL->instruction.opcode;
+            outL->instruction.immediate = inL->instruction.immediate;
+            outL->instruction.rt = inL->instruction.rt;
+            outL->instruction.rs = inL->instruction.rs; */
+    }
+}
 
 int WB(struct latch *inL) {
-    mips_reg[
 
     if ((inL->instruction.opcode != lw) && (inL->instruction.opcode != sw)) {
         mips_reg[inL->instruction.rd] = inL->data;
     } else {
-        mips_reg[inL->instruction.rt] = dataMem[inL->data];
+        mips_reg[inL->instruction.rt] = DataMem[inL->data];
     }
 
     inL->read = 0;
@@ -633,4 +638,3 @@ char *my_strcat(char *dest, const char *src) {
     dest[i + j] = '\0';
     return dest;
 }
-
