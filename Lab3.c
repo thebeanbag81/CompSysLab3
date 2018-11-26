@@ -49,25 +49,7 @@ long pgm_c=0;//program counter
 	struct latch IDEX;
 	struct latch EXMEM;
 	struct latch MEMWB;
-
-
-main (int argc, char *argv[]){
-	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
-	int i;//for loop counter
-	long sim_cycle=0;//simulation cycle counter
-	//define your own counter for the usage of each pipeline stage here
-	/***************************************/
-	//counters
-	int IF_counter = 0;
-	int ID_counter = 0;
-	int EX_counter = 0;
-	int MEM_counter = 0;
-	int WB_counter = 0;
-	int clock_counter = 0;
-
-    /**************************************/
-
-	void latchinit(void){
+void latchinit(void){
 		IFID.write = 1;
 		IFID.read = 0;
 		IFID.data = 0;
@@ -88,6 +70,24 @@ main (int argc, char *argv[]){
 		MEMWB.data = 0;
 		MEMWB.cycle = 0;
 	}
+
+main (int argc, char *argv[]){
+	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
+	int i;//for loop counter
+	long sim_cycle=0;//simulation cycle counter
+	//define your own counter for the usage of each pipeline stage here
+	/***************************************/
+	//counters
+	int IF_counter = 0;
+	int ID_counter = 0;
+	int EX_counter = 0;
+	int MEM_counter = 0;
+	int WB_counter = 0;
+	int clock_counter = 0;
+
+    /**************************************/
+
+	latchinit();
 
 
 
