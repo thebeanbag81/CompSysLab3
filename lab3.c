@@ -475,7 +475,7 @@ struct instruction parser(char *input) {
 
 void IF(){
     if (sim_cycle%c != 0) { //check to see if the program and the latch cycle match: if not sends an error.
-        continue;
+
     }
     else { //for everything else, load the latch with the instruction from memory
         IFID.instruction = instructionMem[pgm_c/4];
@@ -486,10 +486,8 @@ void IF(){
 }
 
 void ID(){
-    if (IFID.write = 1) {
 
-    }
-    else if ((IFID.instruction.opcode == haltSim)) { //first check if the instruction opcode is a simulation stop. Pass it through if it is.
+    if ((IFID.instruction.opcode == haltSim)) { //first check if the instruction opcode is a simulation stop. Pass it through if it is.
         IDEX.instruction = IFID->instruction;
         IDEX.read = IFID.read;
         IDEX.write = IFID.write;
