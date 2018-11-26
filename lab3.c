@@ -1,3 +1,4 @@
+
 // List the full names of ALL group members at the top of your code.
 #include <stdio.h>
 #include <stdlib.h>
@@ -468,13 +469,63 @@ struct instruction parser(char *input) {
 
 }
 
-int IF() {
 
-}
+	void IF(){
+	    IFID.write = 1;
+	    IFID.read = 0;
+	    if (IFID.clock%c != 0) { //check to see if the program cycle and the latch cycle match: if not sends an error.
+	        return NULL;
+	    }
+	    else { //for everything else, load the latch with the instruction from memory
+            IFID.instruction = instructionMem[pgm_c/4];
+	    }
+	}
 
-int ID() {
-
-}
+	int ID(){
+	    IFID.read = 1;
+        IFID.write = 0;
+	    IDEX.read = 0;
+	    IDEX.write = 1;
+	    if (strcmp(IFID.instruction.opcode, haltSim) = 0) { //first check if the instruction opcode is a simulation stop. Pass it through if it is.
+            IDEX.instruction = IFID->instruction;
+            IDEX.read = IFID.read;
+            IDEX.write = IFID.write;
+            IDEX.data = IFID.data;
+            IDEX.clock = IFID.clock;
+	    }
+	    //NEED TO HAVE A FLAG-TYPE STOP HERE
+	    else if (strcmp(IFID->instruction.opcode, add) == 0 || strcmp(IFID.instruction.opcode, sub) == 0 || strcmp(IFID.instruction.opcode, mult) == 0) { //add, sub, and mult opcodes will follow this statement
+	        IDEX.instruction.opcode = IFID.instruction.opcode;
+	        IDEX.instruction.rd = IFID.instruction.rd;
+	        IDEX.instruction.rs = IFID.instruction.rs;
+	        IDEX.instruction.rt = IFID.instruction.rt;
+	    }
+	    else if (strcmp(IFID.instruction.opcode, lw) == 0 || strcmp(IFID.instruction.opcode, sw) == 0) { //lw and sw opcodes will follow this statement
+	        IDEX.instruction.opcode = IFID.instruction.opcode;
+	        IDEX.instruction.immediate = IFID.instruction.immediate;
+	        IDEX.instruction.rt = IFID.instruction.rt;
+	        IDEX.instruction.rs = IFID.instruction.rs;
+	    }
+	    else if (strcmp(IFID.instruction.opcode, addi) == 0) { //addi will follow this statement
+	        IDEX.instruction.opcode = IFID.instruction.opcode;
+	        IDEX.instruction.immediate = IFID.instruction.immediate;
+	        IDEX.instruction.rt = IFID.instruction.rt;
+	        IDEX.instruction.rs = IFID.instruction.rs;
+	    }
+	    else if (strcmp(IFID.instruction.opcode, beq) == 0) { //beq will follow this statement
+	        IDEX.instruction.opcode = IFID.instruction.opcode;
+	        IDEX.instruction.immediate = IFID.instruction.immediate;
+	        IDEX.instruction.rt = IFID.instruction.rt;
+	        IDEX.instruction.rs = IFID.instruction.rs;
+	    }
+	    else { //any stall that needs to happen will be done here: it will subtract 0 so that no numbers change.
+	        IDEX.instruction.opcode = sub;
+	        IDEX.instruction.immediate = 0;
+	        IDEX.instruction.rt = 0;
+	        IDEX.instruction.rs = 0;
+	        IDEX.instruction.rd = 0;
+	    }
+	}
 
 int EX() {
 
@@ -533,9 +584,24 @@ int EX() {
 
 }
 
-int MEM() {
-
-}
+void MEM() {
+	    if (strcmp(EXMEM.instruction.opcode, lw) != 0 || strcmp(EXMEM.instruction.opcode, sw) != 0) {
+	        MEMWB.instruction = EXMEM.instruction;
+	        DataMem[pgm_c/4] = EXMEM.data;
+	    }
+	    else if (strcmp(EXMEM.instruction.opcode, lw) == 0) { //lw and sw opcodes will follow this statement
+	        MEMWB.instruction.opcode = EXMEM.instruction.opcode;
+	        MEMWB.instruction.immediate = EXMEM.instruction.immediate;
+	        MEMWB.instruction.rt = EXMEM.instruction.rt;
+	        MEMWB.instruction.rs = EXMEM.instruction.rs;
+	    }
+	    else if (strcmp(EXMEM.instruction.opcode, sw) == 0) { //addi will follow this statement
+	    /*    outL->instruction.opcode = inL->instruction.opcode;
+	        outL->instruction.immediate = inL->instruction.immediate;
+	        outL->instruction.rt = inL->instruction.rt;
+	        outL->instruction.rs = inL->instruction.rs; */
+	    }
+	}
 
 int WB(struct latch *inL) {
     mips_reg[
@@ -567,7 +633,4 @@ char *my_strcat(char *dest, const char *src) {
     dest[i + j] = '\0';
     return dest;
 }
-
-
-
 
