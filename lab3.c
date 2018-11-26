@@ -86,8 +86,7 @@ main (int argc, char *argv[]){
 	//opcode
 
 
-	struct instr *IM;
-	long InstructionMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
+	struct instr InstructionMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
 	long DataMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
 
 	latchinit();
@@ -238,6 +237,7 @@ main (int argc, char *argv[]){
 
     }
 
+
 	/*********************************************/
 	//progScanner
 	//reads from file provided by user, containing mips assembly
@@ -247,26 +247,28 @@ main (int argc, char *argv[]){
     //lw $s0, 8($t0) --> lw $s0 8 $t0 
 	/*********************************************/
 	char* progScanner(char *c){
-
-        char[] delimiters = [',',' ','\n','\r',',,']; //delimiter array
+    
+      // char c[] = "lw $s0, 8($t0)";
+	
+        char delimiters[] = {',',' ','\n','\r'}; //delimiter array
         char **token;
-        token=(char**)malloc(4*sizeof(char*));        
-        char* formStr = "";
+        token=(char**)malloc(10*sizeof(char*));        
+        char formStr[20];
         
         //finds opcode
         int i = 0;
+	token[0]=(char*)malloc(256*sizeof(char));
         token[i] = strtok(c,delimiters);
-        token[0]=(char*)malloc(2*sizeof(char));
-        i++;
+        
 
         //checks too see if there is an opcode
         if(token[0] == "") return formStr;
         
         //finds rest of instruction
         while(token[i]!=NULL){
-            token[i]=strtok(NULL,delimiters);
-            token[i]=(char*)malloc(256*sizeof(char));
-            i++;
+            token[++i]=(char*)malloc(256*sizeof(char));   
+	    token[i]=strtok(NULL,delimiters);
+            
         }
         //if there are more than 4 parts of the instruction it is invalid
         if(i>4)return formStr;
@@ -275,7 +277,7 @@ main (int argc, char *argv[]){
         //then checks to see if parentheses are correct
         //if they are, removes them from character array and returns 
         //if not returns ERROR
-        if((my_strcmp(token[0],"lw"))==1 || (my_strcmp(token[0],"sw"))==1){
+        if((strcmp(token[0],"lw")==0) || (strcmp(token[0],"sw")==0)){
            char* paren = token[2];
            int j = 0;
            int leftBracket = 0;
@@ -283,34 +285,32 @@ main (int argc, char *argv[]){
            char* foundL;
            char* foundR;
            while(paren[j]!=NULL){
-           foundL=strchr(paren[j],'(');
-           foundR=strchr(paren[j],')');
-            if(foundL) leftBracket++;
-            if(foundR) rightBracket++;
+	    if(paren[j]=='(') leftBracket++;
+	    if(paren[j]==')') rightBracket++;
+		j++;
            }
-           if(leftBracket!=rightBracket) {return formStr;} 
+
+           if(leftBracket!=rightBracket) {return NULL;} 
            else{
                int k = 0;
                while(paren[k]!=NULL){
-                   if((paren[k]==')') || (paren[k]=='(')) paren[k]=" ";
+                   if((paren[k]==')') || (paren[k]=='(')) {paren[k]=' ';}
+		   k++;
                }
            }
            
 
         }
 
-        //pull string together
-        int l = 0;
-        while(l<i*2){
-        formStr[l] = &token[l];
-        formStr[++l]=" ";
-        l++;
-        }
-
+	int l=0;
+        while(token[l]!=NULL){
+	    strcat(formStr,token[l]);
+	    strcat(formStr," ");
+	    l++;
+	    }
         free(token);
-        return formStr;
-        
-
+	putchar('\n');
+    return formStr;
 	}
 
 
@@ -319,148 +319,164 @@ main (int argc, char *argv[]){
     //then if the register it represented as a number like 5
     //it leaves the 5 as is, if it is something like $t0 then 
     //it turns t0 into the corresponding number(8)
-	char *regNumberConverter(char *prog){
-        char *delim = '$ '; //splits takes input from $ to space
+	int regNumberConverter(char *prog){
+    int reg;
+	//char prog[] = "$ra"; //16
+	char delim[] = {'$',' '}; //splits takes input from $ to space
         char *inst = strtok(prog,delim);
-        int register=NULL;
+	reg = -1;
 
 
         if(prog==NULL){
             //ERROR
-            return register;
+            return NULL;
         }
-        else if((mystrcmp(token,"zero")) || (reg[0]!='$') || (strlen(token)>2)){
+        else if((prog[0]!='$') || (strlen(inst)>5)){
             //ERROR
-            return register;
+            return NULL;
         }
 
-        if(isdigit(token[0])){  //is a number then register=token else
-            register = atoi(token);
-            return register;
+        else if(isdigit(inst[0])){     
+            reg = atoi(inst);
+            return reg;
         }
         else{
 
         switch(inst[0]) {
-            case(zero):
-            register=0;
-            break
-            case(at): 
-            register=1;
-            break;
-            case(gp): 
-            register=28;
-            break;
-            case(sp): 
-            register=29;
-            break;
-            case(fp): 
-            register=30;
-            break;
-            case(ra): 
-            register=31;
-            break;
-            case(v0): 
-            register=2;
-            break;
-            case(v1):
-            register=3;
-            break;
-            case(k0):  
-            register=26;
-            break;
-            case(k1): 
-            register=27;
-            break;
-           
-            case(s):
-                switch(inst[1]){
-                    case(0):
-                    register=16; 
-                    break;
-                    case(1):
-                    register=17;
-                    break;
-                    case(2): 
-                    register=18;
-                    break;
-                    case(3): 
-                    register=19;
-                    break;
-                    case(4): 
-                    register=20;
-                    break;
-                    case(5): 
-                    register=21;
-                    break;
-                    case(6): 
-                    register=22;
-                    break;
-                    case(7):
-                    register=23;
-                    break;
-                }
             
-            case(a):
+	    case 'z':
+            {reg=0;}
+            break;
+            case 'g': 
+            {reg=28;}
+            break;
+            case 'f': 
+            {reg=30;}
+            break;
+            case 'r': 
+            {reg=31;}
+            break;
+	    
+            case 'v':
+		switch(inst[1]){
+		case '0':
+		{reg=2;}
+		break;
+		case '1':
+		{reg=3;}
+		break;
+		} 
+            case 'k':
+		switch(inst[1]){
+		case '0':
+		{reg=26;}
+		break;
+		case '1':
+		{reg=27;}
+		break;
+		}  
+
+            case 's':
                 switch(inst[1]){
-                    case(0):
-                    register=4;
+                    case 'p':
+		    {reg=29;}
+		    break;
+		    case '0':
+                    {reg=16;} 
                     break;
-                    case(1): 
-                    register=5;
+                    case '1':
+                    {reg=17;}
                     break;
-                    case(2):
-                    register=6;
+                    case '2': 
+                    {reg=18;}
                     break;
-                    case(3):
-                    register=7;
+                    case '3': 
+                    {reg=19;}
                     break;
-                }
+                    case '4': 
+                    {reg=20;}
+                    break;
+                    case '5': 
+                    {reg=21;}
+                    break;
+                    case '6': 
+                    {reg=22;}
+                    break;
+                    case '7':
+                    {reg=23;}
+                    break;
+                
+		}
+		break;
             
-            case(t):
+            case 'a':
+                switch(inst[1]){
+                    case 't':
+		    {reg=1;}
+		    break;
+		    case '0':
+                    {reg=4;}
+                    break;
+                    case '1': 
+                    {reg=5;}
+                    break;
+                    case '2':
+                    {reg=6;}
+                    break;
+                    case '3':
+                    {reg=7;}
+                    break;
+                
+		}
+		break;
+            
+            case 't':
                  switch(inst[1]){
-                    case(0):
-                    register=8; 
+                    case '0':
+                    {reg=8;} 
                     break;
-                    case(1):
-                    register=9;
+                    case '1':
+                    {reg=9;}
                     break;
-                    case(2): 
-                    register=10;
+                    case '2': 
+                    {reg=10;}
                     break;
-                    case(3): 
-                    register=11;
+                    case '3': 
+                    {reg=11;}
                     break;
-                    case(4): 
-                    register=12;
+                    case '4': 
+                    {reg=12;}
                     break;
-                    case(5): 
-                    register=13;
+                    case '5': 
+                    {reg=13;}
                     break;
-                    case(6): 
-                    register=14;
+                    case '6': 
+                    {reg=14;}
                     break;
-                    case(7):
-                    register=15;
+                    case '7':
+                    {reg=15;}
                     break;
-                    case(8):
-                    register=24;
+                    case '8':
+                    {reg=24;}
                     break;
-                    case(9):
-                    register=25;
+                    case '9':
+                    {reg=25;}
                     break;
-                }
+                
+		}
+		break;
         }
 
         }
 
-        if(register==NULL){
-            //ERROR
-            return "sex";
+
+        if(reg==-1){
+            return NULL;
         }
         else{
-            return register;
+           // printf("%d\n",reg);
+	    return reg;
         }
-
 	}
 
 	/******************************************************************/
@@ -474,9 +490,120 @@ main (int argc, char *argv[]){
         //reg number out of bounds 
         //immediate field too large
     /******************************************************************/
-	struct instruction parser(char *input){
+struct instruction parser(char *input){
+    
+         //char array[] = "addi $s0 $s1 8"; 
+        char formArray[] = progScanner(array);
 
+        char delimiters[] = {' '}; //delimiter array
+        char **token;
+        token=(char**)malloc(10*sizeof(char*));        
+        
+        int i = 0;
+	    token[0]=(char*)malloc(256*sizeof(char));
+        token[i] = strtok(formStr,delimiters);
+    
+        while(token[i]!=NULL){
+        token[++i]=(char*)malloc(256*sizeof(char));   
+	    token[i]=strtok(NULL,delimiters);
+            
+        }
+
+
+char* op = token[0];
+char* rs = token[1];
+char* rt = token[2];
+
+struct instr inst;
+
+switch(op[0]){
+
+case 'a':
+{
+if(op[1]=='d'){
+  	if(op[2]=='d'){
+	   if(op[3]=='i'){
+		inst.opcode=addi;}
+		else inst.opcode=add;
+			
+		}
 	}
+else return NULL;
+}
+break;
+case 's':
+{
+if(op[1]=='u'){
+  	if(op[2]=='b'){
+	   inst.opcode=sub;
+		}
+	}
+else if(op[1]=='w'){
+   inst.opcode=sw;
+}
+else return NULL;
+}
+break;
+case 'm':
+{
+if(op[1]=='u'){
+  	if(op[2]=='l'){
+	   if(op[3]=='t'){
+		inst.opcode=mult;
+			}
+		}
+	}
+else return NULL;
+}
+break;
+case 'b':
+{
+if(op[1]=='e'){
+  	if(op[2]=='q'){
+	   inst.opcode=mult;
+		}
+	}
+else return NULL;
+}
+break;
+case 'l':
+{
+if(op[1]=='w'){
+  inst.opcode=mult;
+	}
+else return NULL;
+}
+break;
+}
+
+
+if(inst.opcode == lw || inst.opcode == sw){
+instr.rt = regNumberConverter(token[1]);
+inst.immediate = atoi(token[2]);
+instr.rs = regNumberConverter(token[3]);
+}
+
+else if(inst.opcode == beq){
+instr.rs = regNumberConverter(token[1]);
+instr.rt = regNumberConverter(token[2]);
+inst.immediate = atoi(token[3]);
+}
+
+else if(inst.opcode == addi){
+instr.rt = regNumberConverter(token[1]);
+instr.rs = regNumberConverter(token[2]);
+inst.immediate = atoi(token[3]);
+}
+
+else{
+instr.rd = regNumberConverter(token[1]);
+instr.rs = regNumberConverter(token[2]);
+instr.rt = regNumberConverter(token[3]); 
+}
+
+return inst;
+
+}
 
 	int IF(){
 

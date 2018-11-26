@@ -6,13 +6,13 @@
 #include <string.h>
 
 void main(){
-	char c[] = "lw $s0, 8($t0(";
+	char c[] = "lw $s0, 8($t0)";
 	
 
         char delimiters[] = {',',' ','\n','\r'}; //delimiter array
         char **token;
-        token=(char**)malloc(4*sizeof(char*));        
-        char* formStr = "";
+        token=(char**)malloc(10*sizeof(char*));        
+        char formStr[20];
         
         //finds opcode
         int i = 0;
@@ -70,12 +70,14 @@ void main(){
         l++;
         }
 */
+
 	int l=0;
         while(token[l]!=NULL){
-        printf("%s ",token[l]);
+	strcat(formStr,token[l]);
+	strcat(formStr," ");
 	l++;
 	}
+	printf("%s",formStr);
         free(token);
 	putchar('\n');
 	}
-
