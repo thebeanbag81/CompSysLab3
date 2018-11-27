@@ -756,18 +756,16 @@ void ID() {
     MEMWB.read = 1;
     MEMWB.write = 0;
 	}
+void WB() {
 
-int WB(struct latch *inL) {
-
-    if ((inL->instruction.opcode != lw) && (inL->instruction.opcode != sw)) {
-        mips_reg[inL->instruction.rd] = inL->data;
-    } else {
-        mips_reg[inL->instruction.rt] = DataMem[inL->data];
+    if ((MEMWB.instruction.opcode != lw) && (MEMWB.instruction.opcode != sw)) {
+        mips_reg[MEMWB.instruction.rd] = MEMWB.data;
+        WB_counter++;
     }
+
 
     inL->read = 0;
     inL->write = 1;
 
 }
 
-}
