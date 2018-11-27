@@ -13,37 +13,21 @@
 void progScanner(char* input);
 int regNumberConverter(char *prog);
 
-int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
-	int c,m,n;
-	int i;//for loop counter
-	long mips_reg[REG_NUM];
-	long pgm_c=0;//program counter
-	long sim_cycle=0;//simulation cycle counter
-	//define your own counter for the usage of each pipeline stage here
-	/***************************************/
-	//counters
-	int IF_counter = 0;
-	int ID_counter = 0;
-	int EX_counter = 0;
-	int MEM_counter = 0;
-	int WB_counter = 0;
-	int clock_counter = 0;
+long InstructionMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
+long DataMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
 
-	//opcode
-	//struct instr InstructionMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
-	long DataMem[512]; //long = 32 bits = 4 bytes = 1 word, IM = 512 words, 2k bytes
-	 char **token;
+enum opcode {
+    add, addi, sub, mul, beq, lw, sw, haltSim
+};
 
 
-enum opcode {add,addi,sub,mul,beq,lw,sw,haltSim};
-
-int registers[32];
-
-void initReg(void){
-    registers[0]=0;
+void initReg(void) {
+    int i;
+    for(i=0; i<REG_NUM; i++)
+        mips_reg[i] = 0;
 }
 
-struct instr{
+struct instr {
     //rtype example
     //add $s1 $s2 $s2 adds contents of register $s1 to $s2
 
@@ -55,24 +39,22 @@ struct instr{
     int rs; //source data
     int rt; //source data
     int rd; //destination for result
-    int immediate; //
-};
+    int immediate; // immediate value
+}
 
-struct latch{
+struct latch {
     struct instr instruction;
     int data;
     int read;
     int write;
-};
-
-struct instr *InstructionMem;
+}
 
 struct latch IFID;
 struct latch IDEX;
 struct latch EXMEM;
 struct latch MEMWB;
 
-void latchinit(void){
+void latchinit(void) {
     IFID.write = 1;
     IFID.read = 0;
     IFID.data = 0;
@@ -89,6 +71,21 @@ void latchinit(void){
     MEMWB.read = 0;
     MEMWB.data = 0;
 }
+
+int c, m, n;
+long mips_reg[REG_NUM];
+
+//define your own counter for the usage of each pipeline stage here
+/***************************************/
+int IF_counter = 0;
+int ID_counter = 0;
+int EX_counter = 0;
+int MEM_counter = 0;
+int WB_counter = 0;
+int clock_counter = 0;
+/**************************************/
+
+long sim_cycle = 0;//simulation cycle counter
 
 struct instr parser(char *input);
 
